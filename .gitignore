@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Model weights (too large for GitHub)
+*.h5
+*.weights.h5
+
+# Dataset (too large for GitHub)
+NeuroBioSense/Advertisement Categories/
+NeuroBioSense/Biosignal Files/
+NeuroBioSense/Participant Data/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
