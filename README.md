@@ -228,12 +228,6 @@ Deep Learning/
 
 ---
 
-## License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
 ## Acknowledgements
 
 - [MobileNetV2](https://arxiv.org/abs/1801.04381) — Sandler et al., 2018
