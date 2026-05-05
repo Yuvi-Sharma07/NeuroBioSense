@@ -1,10 +1,8 @@
-<![CDATA[<div align="center">
+# NeuroBioSense
 
-# 🧠 NeuroBioSense
+**Multimodal Emotion Recognition using Deep Learning**
 
-### Multimodal Emotion Recognition using Deep Learning
-
-*Fusing facial video analysis with physiological biosignals for robust emotion classification*
+Fusing facial video analysis with physiological biosignals for robust emotion classification.
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://tensorflow.org)
@@ -13,87 +11,79 @@
 
 ---
 
-</div>
-
-## 📌 Overview
+## Overview
 
 **NeuroBioSense** is a multimodal deep learning system that classifies human emotions by jointly analyzing **facial video expressions** and **physiological biosignals** (accelerometer, BVP, EDA, temperature). The model fuses spatial-temporal features from video with sequential patterns from wearable sensor data to achieve robust emotion recognition across **7 emotion classes**.
 
-<div align="center">
-
 | Modality | Input | Encoder |
 |:--------:|:-----:|:-------:|
-| 🎬 **Video** | 16 frames × 112×112 RGB | MobileNetV2 + Bi-LSTM |
-| 📊 **Biosignal** | 1280 × 6 channels | 1D-CNN + Bi-LSTM |
-
-</div>
+| Video | 16 frames x 112x112 RGB | MobileNetV2 + Bi-LSTM |
+| Biosignal | 1280 x 6 channels | 1D-CNN + Bi-LSTM |
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-                    ┌──────────────────────────────────┐
-                    │         VIDEO STREAM             │
-                    │  16 frames × 112 × 112 × 3      │
-                    └──────────────┬───────────────────┘
-                                   │
-                    ┌──────────────▼───────────────────┐
-                    │   MobileNetV2 (TimeDistributed)   │
-                    │     (ImageNet, last 10 unfrozen)  │
-                    └──────────────┬───────────────────┘
-                                   │
-                    ┌──────────────▼───────────────────┐
-                    │   GlobalAveragePooling2D (TD)     │
-                    │        + Dropout (0.3)            │
-                    └──────────────┬───────────────────┘
-                                   │
-                    ┌──────────────▼───────────────────┐
-                    │     Bi-LSTM (128) → Bi-LSTM (64) │
-                    │        + Dropout (0.4)            │
-                    └──────────────┬───────────────────┘
-                                   │
-                                   ▼
-                         ┌─────────────────┐
-                         │                 │
-                         │   Concatenate   │◄──────────────────────┐
-                         │                 │                       │
-                         └────────┬────────┘                       │
-                                  │                                │
-                    ┌─────────────▼──────────────┐   ┌─────────────┴───────────────┐
-                    │  Dense(256) → BN → Drop(0.5)│   │     Bi-LSTM (64→32)         │
-                    │  Dense(128) → Dropout(0.4)  │   │       + Dense(64)            │
-                    │  Dense(7, softmax)           │   └─────────────┬───────────────┘
-                    └─────────────┬──────────────┘                  │
-                                  │                   ┌─────────────┴───────────────┐
-                                  ▼                   │  Conv1D(32) → BN → MaxPool  │
-                         ┌────────────────┐           │  Conv1D(64) → BN → MaxPool  │
-                         │  7 Emotions    │           │       + Dropout (0.3)        │
-                         └────────────────┘           └─────────────┬───────────────┘
-                                                                    │
-                                                      ┌─────────────┴───────────────┐
-                                                      │     BIOSIGNAL STREAM        │
-                                                      │     1280 × 6 channels       │
-                                                      └────────────────────────────┘
+                    +----------------------------------+
+                    |         VIDEO STREAM             |
+                    |  16 frames x 112 x 112 x 3      |
+                    +----------------+-----------------+
+                                     |
+                    +----------------v-----------------+
+                    |   MobileNetV2 (TimeDistributed)   |
+                    |   (ImageNet, last 10 unfrozen)    |
+                    +----------------+-----------------+
+                                     |
+                    +----------------v-----------------+
+                    |   GlobalAveragePooling2D (TD)     |
+                    |        + Dropout (0.3)            |
+                    +----------------+-----------------+
+                                     |
+                    +----------------v-----------------+
+                    |   Bi-LSTM (128) -> Bi-LSTM (64)   |
+                    |        + Dropout (0.4)            |
+                    +----------------+-----------------+
+                                     |
+                                     v
+                          +------------------+
+                          |   Concatenate    |<-----------------------+
+                          +--------+---------+                        |
+                                   |                                  |
+                    +--------------v---------------+    +-------------+---------------+
+                    | Dense(256) -> BN -> Drop(0.5) |    |     Bi-LSTM (64 -> 32)      |
+                    | Dense(128) -> Dropout(0.4)    |    |       + Dense(64)           |
+                    | Dense(7, softmax)              |    +-------------+---------------+
+                    +--------------+---------------+                  |
+                                   |                   +--------------+---------------+
+                                   v                   | Conv1D(32) -> BN -> MaxPool   |
+                          +----------------+           | Conv1D(64) -> BN -> MaxPool   |
+                          |  7 Emotions    |           |       + Dropout (0.3)         |
+                          +----------------+           +--------------+---------------+
+                                                                      |
+                                                       +--------------+---------------+
+                                                       |      BIOSIGNAL STREAM        |
+                                                       |      1280 x 6 channels       |
+                                                       +------------------------------+
 ```
 
 ---
 
-## 🎯 Emotion Classes
+## Emotion Classes
 
 | Code | Emotion | Description |
 |:----:|:-------:|:-----------:|
-| `A` | 😠 Anger | Expressions of anger or frustration |
-| `D` | 🤢 Disgust | Expressions of disgust or aversion |
-| `F` | 😨 Fear | Expressions of fear or anxiety |
-| `H` | 😊 Happy | Expressions of happiness or joy |
-| `N` | 😐 Neutral | Neutral baseline expressions |
-| `SA` | 😢 Sad | Expressions of sadness or sorrow |
-| `SU` | 😲 Surprise | Expressions of surprise or shock |
+| A | Anger | Expressions of anger or frustration |
+| D | Disgust | Expressions of disgust or aversion |
+| F | Fear | Expressions of fear or anxiety |
+| H | Happy | Expressions of happiness or joy |
+| N | Neutral | Neutral baseline expressions |
+| SA | Sad | Expressions of sadness or sorrow |
+| SU | Surprise | Expressions of surprise or shock |
 
 ---
 
-## 📂 Dataset Structure
+## Dataset Structure
 
 The project uses the **NeuroBioSense** dataset, organized as follows:
 
@@ -112,7 +102,7 @@ NeuroBioSense/
 ├── Biosignal Files/
 │   ├── Raw/                           # Raw sensor recordings
 │   └── Pre-Processed/
-│       └── 32-Hertz.csv               # Preprocessed biosignals (ACC, BVP, EDA, TEMP)
+│       └── 32-Hertz.csv               # Preprocessed biosignals
 └── Participant Data/
 ```
 
@@ -127,7 +117,7 @@ NeuroBioSense/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -138,7 +128,7 @@ NeuroBioSense/
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/NeuroBioSense.git
+git clone https://github.com/Yuvi-Sharma07/NeuroBioSense.git
 cd NeuroBioSense
 
 # Create a virtual environment (recommended)
@@ -158,6 +148,7 @@ python multimodal_dl.py
 ```
 
 On first run, the script will:
+
 1. Scan the dataset directory for all video samples
 2. Split data into **Train (70%) / Validation (15%) / Test (15%)** sets
 3. Train the multimodal model for up to 40 epochs with early stopping
@@ -169,7 +160,7 @@ On subsequent runs, pre-trained weights are loaded automatically — no retraini
 
 ---
 
-## ⚙️ Training Details
+## Training Details
 
 | Hyperparameter | Value |
 |:--------------:|:-----:|
@@ -185,20 +176,16 @@ On subsequent runs, pre-trained weights are loaded automatically — no retraini
 
 ### Data Augmentation
 
-- **Video**: Random horizontal flip, brightness jitter (±0.1), contrast adjustment (0.8–1.2×)
-- **Biosignal**: Gaussian noise injection (σ = 0.02)
+- **Video**: Random horizontal flip, brightness jitter (+/-0.1), contrast adjustment (0.8-1.2x)
+- **Biosignal**: Gaussian noise injection (std = 0.02)
 
 ---
 
-## 📊 Results
+## Results
 
 ### ROC Curve (One-vs-Rest)
 
-<div align="center">
-
 ![ROC Curve](NeuroBioSense/roc_curve.png)
-
-</div>
 
 ### Per-Class AUC Scores
 
@@ -213,7 +200,7 @@ On subsequent runs, pre-trained weights are loaded automatically — no retraini
 
 ---
 
-## 🛠️ Key Features
+## Key Features
 
 - **Multimodal Fusion** — Combines visual and physiological data streams for more robust emotion recognition than either modality alone
 - **Transfer Learning** — Leverages ImageNet-pretrained MobileNetV2 with selective fine-tuning of deeper layers
@@ -224,11 +211,11 @@ On subsequent runs, pre-trained weights are loaded automatically — no retraini
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Deep Learning/
-├── multimodal_dl.py              # Main training & evaluation script
+├── multimodal_dl.py              # Main training and evaluation script
 ├── README.md                     # This file
 └── NeuroBioSense/
     ├── Advertisement Categories/ # Video dataset (MP4 files)
@@ -242,13 +229,13 @@ Deep Learning/
 
 ---
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - [MobileNetV2](https://arxiv.org/abs/1801.04381) — Sandler et al., 2018
 - [TensorFlow](https://www.tensorflow.org/) — Google Brain Team
@@ -256,9 +243,4 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ---
 
-<div align="center">
-
-**Built with ❤️ using TensorFlow & OpenCV**
-
-</div>
-]]>
+**Built with TensorFlow and OpenCV**
